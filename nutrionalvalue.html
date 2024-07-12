@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Nutrition Assessment Tool</title>
+<style>
+body {background-color: powderblue;}
+tbody{
+display:block;
+}
+
+tbody.cat{
+   /* 
+    border: 2px solid black;
+    border-collapse: separate;
+    border-spacing: 4px; 
+    margin-bottom:10px;*/
+	display:block;
+	border-bottom:2px solid black;
+}
+</style>
+<script>
+
+//https://stackoverflow.com/questions/762011/what-is-the-difference-between-let-and-var
+var recomm = {
+	"Protein"	: 6,//{"oz-equiv":6},
+	"Vegetables": 3,//{"cups":3},
+	"Fruits"	: 2,//{"cups":2},
+	"Grains"	: 7,//{"oz-equiv":7},
+	"Dairy"		: 3,//{"cups":3}
+}
+var foodCategoriesItemsObject = {
+  "Protein": {
+    "Meat": {"oz-equiv":12},//"recomm-oz-equiv":6},
+    "Canned (Tuna, Beef, etc.)": {"oz-equiv":12},//"recomm-oz-equiv":6},
+    "Whole Chicken": {"oz-equiv":9},//,"recomm-oz-equiv":3}    
+	"Eggs": {"oz-equiv":9},
+	"Nut butters":{"oz-equiv":9}
+  },
+  "Vegetables": {
+    "Fresh": {"cups":3},
+    "Canned": {"cups":3},
+	"Tomato Sauce":{"cups":3},
+	"Juice":{"cups":3}
+  },
+  "Fruits": { 
+    "Fresh": {"cups":3},
+    "Dried": {"cups":3},
+	"Juice":{"cups":3},
+	"Canned":{"cups":3}
+  },
+  "Grains": {
+    "Bread": {"oz-equiv":18},//"recomm-oz-equiv":3.5} ,
+    "Cereal": {"oz-equiv":16.25},//,"recomm-oz-equiv":3.5}
+	"Crackers": {"oz-equiv":16.25},
+	"Dry (Rice, Bulgar, Oatmeal)": {"oz-equiv":16.25}
+	
+  },
+  "Dairy": {
+    "Milk": {"cups":16},//,"recomm-cups":3}
+	"Yogurt": {"cups":16.25},
+	"Cheese": {"cups":15}
+  }
+}
+window.onload = function() {
+  //var foodcategorySel = document.getElementById("foodcategory");
+  
+  //var chapterSel = document.getElementById("chapter");
+  for (let x in foodCategoriesItemsObject) {
+  
+   tbodyElem = document.getElementById(x+'-items');
+   tbodyElem.getElementsByTagName('tr')[0].id+= "1"
+   
+   let itemsSel = document.getElementById(x+"-Select-");
+   itemsSel.id+="1";
+   itemsSel.options[0] = new Option("Select an Item","");
+   for(var y in foodCategoriesItemsObject[x]){
+    itemsSel.options[itemsSel.options.length] = new Option(y, y);
+	}
+	itemsSel.onchange = function(){
+		tdElem = this.parentElement.nextElementSibling.nextElementSibling.nextElementSibling;
+		if(x=="Vegetables" || x=="Fruits"){
+			if(this.value == "Juice"){				
+				tdElem.innerHTML = "gallons";
+			}
+			else{
+				tdElem.innerHTML = "lbs";
+			}
+		}else if(x=="Dairy"){
+			if(this.value != "Milk"){
+				//tdElem = this.parentElement.nextElementSibling.nextElementSibling.nextElementSibling;
+				tdElem.innerHTML = "lbs";
+			}
+			else{
+				tdElem.innerHTML = "gallons";
+			}
+		}
+	}
+   inputText = document.getElementById(x+"-quantity-");
+   inputText.id+= "1";
+  //foodcategorySel.length = 1;
+  var bttn = document.getElementById(x+'-bttn');
+  bttn.onclick = function(){
+	item_rows = document.getElementById(x+'-items');
+	num_rows = item_rows.children.length;
+	//console.log(num_rows);
+	item_row = item_rows.children[num_rows-1];
+	//console.log(x+'-item');
+	cloned_row = item_row.cloneNode(true);
+	item_row.after(cloned_row);
+	num_rows = num_rows + 1;
+	cloned_row.id = x+"-item-"+num_rows;
+	cloned_row.querySelector("select").id= x+"-Select-"+num_rows;
+	cloned_row.querySelector("input").id = x+"-quantity-"+num_rows;
+  }
+
+  }
+  var calcPerc = document.getElementById("calculate");
+  calcPerc.onclick= function(){
+  // for each food group i
+  // 	for each item j in food group i
+			//val_j = quantity * oz-equiv / num_of_indiv / num_of_days
+		// perc = sum(val_j)/ recomm 
+	let noOfDays = document.getElementById("noOfDays").value;
+	let noOfIndivid = document.getElementById("noOfIndivid").value;
+	for (let x in foodCategoriesItemsObject) {
+		item_rows = document.getElementById(x+'-items');
+		num_rows = item_rows.children.length;
+		console.log("num_rows: "+num_rows);
+		val_conv = 0;
+		for(let i=0; i< item_rows.children.length; i++){
+			child = item_rows.children[i];
+			console.log(child);
+			val = child.querySelector("input").value;
+			it = child.querySelector("select").value;
+			if(x =="Protein" || x=="Grains"){
+				conv = foodCategoriesItemsObject[x][it]["oz-equiv"];
+			}else{
+				conv = foodCategoriesItemsObject[x][it]["cups"];
+			}
+			val_conv = val_conv + parseFloat(val) * parseFloat(conv);
+			console.log(val_conv);
+		}
+		perc = val_conv / parseInt(noOfDays) / parseInt(noOfIndivid);
+		perc = perc / recomm[x] * 100;
+		percItm = document.getElementById(x+"_perc");
+		percItm.innerHTML = perc.toFixed(2) + "%";
+	}
+  }
+  //console.log(document.getElementById('Protein-items').getElementsByTagName('tr').length);
+}
+</script>
+</head>
+<body>
+
+<h1>Nutrition Value Assessment</h1>
+<p>Use this tool to evaluate the nutritional value of the food items distributed.</p>
+
+<table>
+<tr>
+
+<td>Enter number of days:</td> <td><input type="text" id="noOfDays"/></td> <td>Enter number of individuals: </td> <td><input type="text" id="noOfIndivid"/></td>
+</tr>
+
+<tr><td>Protein</td><td> <button id="Protein-bttn"> Add Item</button> </td></tr>
+<tbody id="Protein-items" class="cat">
+<tr id='Protein-item-'>
+<td>Select an Item:</td><td> <select id="Protein-Select-" ></select></td> <!--<td><input type="text" id="Protein-quantType"/></td> -->
+<td>Quantity:</td>  <td><input type="text" id="Protein-quantity-" /></td><td>lbs</td>
+</tr>
+</tbody>
+
+<tr><td>Vegetables</td><td> <button id="Vegetables-bttn"> Add Item</button> </td></tr>
+<tbody id='Vegetables-items' class="cat"> 
+<tr id='Vegetables-item-'>
+<td>Select an Item:</td><td> <select id="Vegetables-Select-" ></select></td> <!-- <td><input type="text" id="Vegetables-quantType"/></td> --> <td>Quantity:</td>  <td><input type="text" id="Vegetables-quantity-"/></td><td>lbs</td>
+</tr>
+</tbody>
+
+<tr><td>Fruits</td><td> <button id="Fruits-bttn"> Add Item</button> </td></tr>
+<tbody id='Fruits-items' class="cat">
+<tr id='Fruits-item-'>
+<td>Select an Item:</td><td> <select id="Fruits-Select-" ></select></td> <!-- <td><input type="text" id="Fruits-quantType"/></td> --> <td>Quantity:</td>  <td><input type="text" id="Fruits-quantity-"/></td><td>lbs</td>
+</tr>
+</tbody>
+
+<tr><td>Grains</td><td> <button id="Grains-bttn"> Add Item</button> </td></tr>
+<tbody id='Grains-items' class="cat">
+<tr id='Grains-item-'>
+<td>Select an Item:</td><td> <select id="Grains-Select-"></select></td> <!-- <td><input type="text" id="Grains-quantType"/></td> --> <td>Quantity:</td>  <td><input type="text" id="Grains-quantity-"/></td><td>lbs</td>
+</tr>
+</tbody>
+
+<tr><td>Dairy</td><td> <button id="Dairy-bttn"> Add Item</button> </td></tr>
+<tbody id="Dairy-items" class="cat">
+<tr id='Dairy-item-'>
+<td>Select an Item:</td><td> <select id="Dairy-Select-"></select></td>  <!-- <td><input type="text" id="Dairy-quantType"/></td> --> <td>Quantity:</td>  <td><input type="text" id="Dairy-quantity-"/></td><td>gallons</td>
+</tr>
+</tbody>
+
+<tr>
+<td colspan="7"><button id="calculate">Calculate Percentage </button></td>
+</tr>
+
+</table>
+<table>
+<tr>
+<td>Protein</td><td>Vegetables</td><td>Fruits</td><td>Grains</td><td>Dairy</td>
+</tr>
+<tr>
+<td id="Protein_perc"></td><td id="Vegetables_perc"></td><td id="Fruits_perc"></td><td id="Grains_perc"></td><td id="Dairy_perc"></td>
+</tr>
+</table>
+
+</body>
+</html>
